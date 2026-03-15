@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ravimiäpp — Annuse kalkulaator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 480px;
+      margin: 0 auto 20px;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="number"] {
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #e2e8f0;
+      font-size: 1.1rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    input[type="number"]:focus {
+      border-color: #38bdf8;
+    }
+
+    .seg {
+      display: flex;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .seg button {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #64748b;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 10px 4px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .seg button.active {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    .seg button:not(.active):hover {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+
+    .syringe-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .syringe-btn {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #64748b;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 10px 4px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      text-align: center;
+    }
+
+    .syringe-btn.active {
+      background: #0ea5e9;
+      border-color: #0ea5e9;
+      color: #fff;
+    }
+
+    .syringe-btn:not(.active):hover {
+      border-color: #38bdf8;
+      color: #e2e8f0;
+    }
+
+    .custom-ml-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .custom-ml-row input {
+      width: 90px;
+      flex: none;
+    }
+
+    .custom-ml-row span {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    /* Result */
+    .result-card {
+      background: linear-gradient(135deg, #0c4a6e 0%, #164e63 100%);
+      border: 1px solid #0369a1;
+      border-radius: 16px;
+      padding: 28px 24px;
+      max-width: 480px;
+      margin: 0 auto 20px;
+      text-align: center;
+    }
+
+    .result-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #7dd3fc;
+      margin-bottom: 10px;
+    }
+
+    .result-value {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .result-unit {
+      font-size: 1rem;
+      color: #7dd3fc;
+      font-weight: 500;
+    }
+
+    .result-detail {
+      font-size: 0.8rem;
+      color: #38bdf8;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(56, 189, 248, 0.2);
+      line-height: 1.6;
+    }
+
+    .empty-state {
+      color: #475569;
+      font-size: 1rem;
+      padding: 8px 0;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #334155;
+      margin: 4px 0 20px;
+    }
+
+    .warning {
+      background: #422006;
+      border: 1px solid #92400e;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.78rem;
+      color: #fbbf24;
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Ravimiäpp</h1>
+<p class="subtitle">Annuse ja kontsentratsiooni kalkulaator</p>
+
+<!-- Osa 1: Ravimi andmed -->
+<div class="card">
+  <div class="card-title">1. Ravimi andmed</div>
+
+  <div class="field">
+    <label>Ravimi kogus</label>
+    <div class="input-row">
+      <input type="number" id="drugAmount" placeholder="nt 500" min="0" step="any" oninput="calculate()" />
+      <div class="seg" id="unitSeg">
+        <button class="active" onclick="setUnit('mg', this)">mg</button>
+        <button onclick="setUnit('mcg', this)">mcg</button>
+        <button onclick="setUnit('g', this)">g</button>
+        <button onclick="setUnit('%', this)">%</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Lahuse maht (ampulli/pudeli maht)</label>
+    <div class="input-row">
+      <input type="number" id="stockVolume" placeholder="nt 10" min="0.1" step="any" oninput="calculate()" />
+      <span style="align-self:center; color:#64748b; font-size:0.9rem; padding-right:4px;">ml</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Lahjenduskordaja (valikuline)</label>
+    <div class="seg" id="dilSeg">
+      <button class="active" onclick="setDilution(1, this)">1:1</button>
+      <button onclick="setDilution(2, this)">1:2</button>
+      <button onclick="setDilution(5, this)">1:5</button>
+      <button onclick="setDilution(10, this)">1:10</button>
+    </div>
+  </div>
+</div>
+
+<!-- Osa 2: Süstal -->
+<div class="card">
+  <div class="card-title">2. Perfuusori süstal</div>
+
+  <div class="field">
+    <label>Süstla maht</label>
+    <div class="syringe-grid">
+      <button class="syringe-btn" onclick="setSyringe(5, this)">5 ml</button>
+      <button class="syringe-btn" onclick="setSyringe(10, this)">10 ml</button>
+      <button class="syringe-btn active" onclick="setSyringe(20, this)">20 ml</button>
+      <button class="syringe-btn" onclick="setSyringe(50, this)">50 ml</button>
+    </div>
+    <div class="custom-ml-row">
+      <input type="number" id="customSyringe" placeholder="Muu" min="1" step="any"
+             oninput="setCustomSyringe(this)" />
+      <span>ml (kohandatud)</span>
+    </div>
+  </div>
+</div>
+
+<!-- Tulemus -->
+<div class="result-card" id="resultCard">
+  <div class="result-label">Kontsentratsioon süstlas</div>
+  <div id="resultMain" class="empty-state">Sisesta andmed</div>
+  <div id="resultDetail" class="result-detail" style="display:none"></div>
+</div>
+
+<p class="warning">⚠ See kalkulaator on abivahend. Kontrolli alati annused üle ametlike protokollide ja ravimijuhistega.</p>
+
+<script>
+  let state = {
+    unit: 'mg',
+    dilution: 1,
+    syringeVol: 20,
+  };
+
+  function setUnit(u, btn) {
+    state.unit = u;
+    document.querySelectorAll('#unitSeg button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calculate();
+  }
+
+  function setDilution(d, btn) {
+    state.dilution = d;
+    document.querySelectorAll('#dilSeg button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calculate();
+  }
+
+  function setSyringe(v, btn) {
+    state.syringeVol = v;
+    document.getElementById('customSyringe').value = '';
+    document.querySelectorAll('.syringe-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calculate();
+  }
+
+  function setCustomSyringe(input) {
+    const v = parseFloat(input.value);
+    if (v > 0) {
+      state.syringeVol = v;
+      document.querySelectorAll('.syringe-btn').forEach(b => b.classList.remove('active'));
+      calculate();
+    }
+  }
+
+  function fmt(n) {
+    if (n === 0) return '0';
+    if (n >= 1000) return n.toFixed(0);
+    if (n >= 100) return n.toFixed(1);
+    if (n >= 10) return n.toFixed(2);
+    if (n >= 1) return n.toFixed(3);
+    return n.toPrecision(3);
+  }
+
+  function calculate() {
+    const amount = parseFloat(document.getElementById('drugAmount').value);
+    const stockVol = parseFloat(document.getElementById('stockVolume').value);
+    const mainEl = document.getElementById('resultMain');
+    const detailEl = document.getElementById('resultDetail');
+
+    if (!amount || !stockVol || amount <= 0 || stockVol <= 0) {
+      mainEl.className = 'empty-state';
+      mainEl.innerHTML = 'Sisesta andmed';
+      detailEl.style.display = 'none';
+      return;
+    }
+
+    const unit = state.unit;
+    const dilution = state.dilution;
+    const syringeVol = state.syringeVol;
+
+    // Lahjendatud lahuse kogumaht
+    const dilutedVol = stockVol * dilution;
+
+    // Kontsentratsioon pärast lahjendust (enne süstlasse tõmbamist)
+    const concAfterDil = amount / dilutedVol; // unit/ml
+
+    // Süstlas: kui tõmbame kogu lahjendatud lahuse süstlasse (max syringeVol)
+    // Kui lahuse maht > süstla maht — hoiatus
+    // Kontsentratsioon süstlas (1 ml)
+    const concInSyringe = amount / syringeVol; // unit/ml
+
+    // Kui lahjenduskordaja > 1, siis tegelik lahjendatud maht vs süstla maht
+    const finalConc = dilutedVol <= syringeVol
+      ? amount / syringeVol
+      : amount / dilutedVol;
+
+    mainEl.className = 'result-value';
+
+    if (unit === '%') {
+      // Protsendilahus: kontsentratsioon on % (g/100ml)
+      const percInSyringe = (amount * syringeVol) / (100 * syringeVol);
+      mainEl.innerHTML = `${fmt(amount / syringeVol * (stockVol / 100 * 100))} <span class="result-unit">% / ml</span>`;
+    } else {
+      mainEl.innerHTML = `${fmt(finalConc)} <span class="result-unit">${unit}/ml</span>`;
+    }
+
+    // Detailinfo
+    const lines = [];
+    if (unit !== '%') {
+      lines.push(`Algne kontsentratsioon: ${fmt(amount / stockVol)} ${unit}/ml (${amount} ${unit} / ${stockVol} ml)`);
+      if (dilution > 1) {
+        lines.push(`Pärast ${dilution}× lahjendust: ${fmt(concAfterDil)} ${unit}/ml (maht ${dilutedVol} ml)`);
+      }
+      lines.push(`${syringeVol} ml süstlas → <strong>${fmt(finalConc)} ${unit}/ml</strong>`);
+
+      // Lisainfo: 10ml annus
+      const per10ml = finalConc * 10;
+      lines.push(`10 ml = ${fmt(per10ml)} ${unit}`);
+    }
+
+    if (dilutedVol > syringeVol) {
+      lines.push(`⚠ Lahjendatud maht (${dilutedVol} ml) ületab süstla mahtu (${syringeVol} ml)!`);
+    }
+
+    detailEl.innerHTML = lines.join('<br>');
+    detailEl.style.display = 'block';
+  }
+</script>
+</body>
+</html>
