@@ -23,7 +23,6 @@
     input[type=number]{-moz-appearance:textfield}
     input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
-    /* Drug selector */
     .drug-search-wrap{position:relative}
     #drugSearch{padding-right:36px;font-size:.9rem}
     .clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#475569;cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1}
@@ -49,7 +48,6 @@
     .info-box{background:#0b1220;border:1px solid #2a3a5c;border-radius:9px;padding:10px 12px;font-size:.78rem;color:#94a3b8;line-height:1.6;margin-bottom:14px}
     .info-box strong{color:#38bdf8}
 
-    /* Result */
     .result-card{background:linear-gradient(135deg,#0c3a5e,#0a2d4a);border:1px solid #0369a1;border-radius:14px;padding:22px 18px 18px;max-width:500px;margin:0 auto 14px;text-align:center}
     .result-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1.2px;color:#7dd3fc;margin-bottom:8px}
     .result-main{font-size:3rem;font-weight:900;color:#fff;line-height:1;margin-bottom:4px}
@@ -62,9 +60,50 @@
 
     .empty-state{color:#334155;font-size:1rem;padding:12px 0}
 
-    .warn-box{background:#2d1a00;border:1px solid #92400e;border-radius:10px;padding:10px 14px;font-size:.73rem;color:#fbbf24;max-width:500px;margin:0 auto;text-align:center;line-height:1.5}
+    .warn-box{background:#2d1a00;border:1px solid #92400e;border-radius:10px;padding:10px 14px;font-size:.73rem;color:#fbbf24;max-width:500px;margin:0 auto 14px;text-align:center;line-height:1.5}
 
     .manual-toggle{font-size:.72rem;color:#38bdf8;cursor:pointer;text-decoration:underline;margin-top:6px;display:inline-block}
+
+    /* Dose table */
+    .dose-table{border-top:1px solid rgba(56,189,248,.2);margin-top:14px;padding-top:14px;text-align:left}
+    .dose-table-title{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:#7dd3fc;margin-bottom:10px;font-weight:700}
+    .dose-table-head{display:grid;grid-template-columns:1fr 1.6fr 1fr;font-size:.65rem;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;padding:0 4px}
+    .dose-row{display:grid;grid-template-columns:1fr 1.6fr 1fr;font-size:.8rem;padding:5px 4px;border-radius:6px;align-items:center}
+    .dose-row:nth-child(odd){background:rgba(255,255,255,.03)}
+    .dose-val{font-weight:700;color:#e2e8f0}
+    .dose-unit-cell{color:#64748b;font-size:.72rem}
+    .dose-rate-val{font-weight:700;color:#38bdf8;text-align:right}
+
+    /* Print button */
+    .print-btn{display:block;margin:14px auto 0;background:none;border:1px solid #334155;border-radius:9px;color:#94a3b8;font-size:.8rem;padding:8px 18px;cursor:pointer;transition:all .15s;max-width:500px;width:100%}
+    .print-btn:hover{border-color:#38bdf8;color:#38bdf8}
+
+    /* Print styles */
+    @media print {
+      body{background:#fff;color:#111;padding:12px}
+      h1{color:#0369a1}
+      .subtitle{color:#555}
+      .card{background:#f8fafc;border:1px solid #cbd5e1;box-shadow:none}
+      .card-title{color:#475569}
+      .card-title span{background:#0369a1}
+      .info-box{background:#f1f5f9;border:1px solid #cbd5e1;color:#475569}
+      .info-box strong{color:#0369a1}
+      input,select{background:#fff;border:1px solid #cbd5e1;color:#111}
+      .result-card{background:linear-gradient(135deg,#e0f2fe,#f0f9ff);border:1px solid #0369a1}
+      .result-label{color:#0369a1}
+      .result-main{color:#0c4a6e}
+      .result-unit{color:#0369a1}
+      .result-row-label{color:#475569}
+      .result-row-val{color:#111}
+      .result-row-val.highlight{color:#0369a1}
+      .dose-table-title{color:#0369a1}
+      .dose-unit-cell{color:#475569}
+      .dose-rate-val{color:#0369a1}
+      .warn-box{background:#fffbeb;border:1px solid #f59e0b;color:#92400e}
+      .drug-dropdown,.clear-btn,.manual-toggle,.print-btn,#manualSection,.chip-row{display:none!important}
+      #drugSearch{border:none;font-size:1rem;font-weight:700;padding:0}
+      .chip.active::after{content:' ✓'}
+    }
   </style>
 </head>
 <body>
@@ -137,89 +176,140 @@
   </div>
 </div>
 
+<!-- 3. Patsient -->
+<div class="card">
+  <div class="card-title"><span>3</span> Patsient <span style="background:#334155;font-size:.6rem;padding:2px 6px;border-radius:4px;letter-spacing:.5px;width:auto;height:auto;border-radius:4px">valikuline</span></div>
+  <div class="field" style="margin-bottom:0">
+    <label>Kehakaal — kaalupõhiste annuste tabeliks</label>
+    <div class="input-row">
+      <input type="number" id="patientWeight" placeholder="nt 70" min="1" max="300" step="0.5" oninput="calculate()" />
+      <div class="unit-badge">kg</div>
+    </div>
+  </div>
+</div>
+
 <!-- Tulemus -->
 <div class="result-card" id="resultCard">
   <div class="result-label">Kontsentratsioon süstlas</div>
   <div id="resultMain" class="empty-state">Vali ravim ja süstla maht</div>
   <div id="resultRows" class="result-rows" style="display:none"></div>
+  <div id="doseTableSection" style="display:none"></div>
 </div>
 
 <div class="warn-box">⚠ Kontrolli annused alati ametlike protokollide ja ravimijuhistega.</div>
 
+<button class="print-btn" id="printBtn" onclick="window.print()" style="display:none">🖨 Prindi / Salvesta PDF</button>
+
 <script>
 // ─── RAVIMITE ANDMEBAAS ──────────────────────────────────────────────────────
+// doseInfo: { unit: 'mcg/kg/min'|'mcg/kg/h'|'mg/kg/h'|'IU/kg/h', ranges: [...] }
 const DRUGS = [
   // 1. Adrenenergilised ained
-  { id:'dopamiin',    cat:'Adrenenergilised ained', name:'Dopamiin',        conc:40,   unit:'mg', ampVol:5,   form:'infusioonikontsentraat 200mg/5ml' },
-  { id:'epi',         cat:'Adrenenergilised ained', name:'Epinefriin',      conc:1,    unit:'mg', ampVol:1,   form:'süstelahus 1mg/ml' },
-  { id:'norepi',      cat:'Adrenenergilised ained', name:'Norepinefriin',   conc:1,    unit:'mg', ampVol:4,   form:'süstelahus 1mg/ml (4ml ampull)' },
-  { id:'isoprot',     cat:'Adrenenergilised ained', name:'Isoproterinool',  conc:0.2,  unit:'mg', ampVol:5,   form:'süstelahus 0,2mg/ml' },
+  { id:'dopamiin',    cat:'Adrenenergilised ained', name:'Dopamiin',        conc:40,   unit:'mg',  ampVol:5,   form:'infusioonikontsentraat 200mg/5ml',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[2,5,10,15,20] } },
+  { id:'dobutamiin',  cat:'Adrenenergilised ained', name:'Dobutamiin',      conc:12.5, unit:'mg',  ampVol:20,  form:'infusioonikontsentraat 12,5mg/ml (250mg/20ml)',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[2,5,10,15,20] } },
+  { id:'epi',         cat:'Adrenenergilised ained', name:'Epinefriin',      conc:1,    unit:'mg',  ampVol:1,   form:'süstelahus 1mg/ml',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.01,0.05,0.1,0.3,0.5] } },
+  { id:'norepi',      cat:'Adrenenergilised ained', name:'Norepinefriin',   conc:1,    unit:'mg',  ampVol:4,   form:'süstelahus 1mg/ml (4ml ampull)',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.01,0.05,0.1,0.3,0.5] } },
+  { id:'isoprot',     cat:'Adrenenergilised ained', name:'Isoproterinool',  conc:0.2,  unit:'mg',  ampVol:5,   form:'süstelahus 0,2mg/ml',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.01,0.03,0.05,0.1] } },
+  { id:'vasopressiin',cat:'Adrenenergilised ained', name:'Vasopressiin',    conc:20,   unit:'IU',  ampVol:1,   form:'süstelahus 20IU/ml' },
 
   // 2. Antidoodid
-  { id:'naloksoon',   cat:'Antidoodid',             name:'Naloksoon',       conc:0.4,  unit:'mg', ampVol:1,   form:'süstelahus 0,4mg/ml' },
-  { id:'flumaseniil', cat:'Antidoodid',             name:'Flumaseniil',     conc:0.5,  unit:'mg', ampVol:1,   form:'süstelahus 0,5mg/ml' },
+  { id:'naloksoon',   cat:'Antidoodid',             name:'Naloksoon',       conc:0.4,  unit:'mg',  ampVol:1,   form:'süstelahus 0,4mg/ml' },
+  { id:'flumaseniil', cat:'Antidoodid',             name:'Flumaseniil',     conc:0.5,  unit:'mg',  ampVol:1,   form:'süstelahus 0,5mg/ml' },
 
   // 3. Antipsühhootilised
-  { id:'halop',       cat:'Antipsühhootilised',     name:'Haloperidool',    conc:5,    unit:'mg', ampVol:1,   form:'süstelahus 5mg/ml' },
+  { id:'halop',       cat:'Antipsühhootilised',     name:'Haloperidool',    conc:5,    unit:'mg',  ampVol:1,   form:'süstelahus 5mg/ml' },
 
   // 4. Antiarütmikumid
-  { id:'verapamiil',  cat:'Antiarütmikumid',        name:'Verapamiil',      conc:2.5,  unit:'mg', ampVol:2,   form:'süstelahus 2,5mg/ml' },
-  { id:'metop',       cat:'Antiarütmikumid',        name:'Metoprolool',     conc:1,    unit:'mg', ampVol:5,   form:'süstelahus 1mg/ml' },
-  { id:'adenosiin',   cat:'Antiarütmikumid',        name:'Adenosiin',       conc:3,    unit:'mg', ampVol:2,   form:'süstelahus 3mg/ml' },
-  { id:'amiodaroon',  cat:'Antiarütmikumid',        name:'Amiodaroon',      conc:50,   unit:'mg', ampVol:3,   form:'infusioonikontsentraat 50mg/ml (150mg/3ml)' },
-  { id:'propafenoon', cat:'Antiarütmikumid',        name:'Propafenoon',     conc:3.5,  unit:'mg', ampVol:20,  form:'süstelahus 3,5mg/ml' },
-  { id:'lidokaiin_iv',cat:'Antiarütmikumid',        name:'Lidokaiin (IV)',  conc:20,   unit:'mg', ampVol:5,   form:'süstelahus 20mg/ml' },
+  { id:'verapamiil',  cat:'Antiarütmikumid',        name:'Verapamiil',      conc:2.5,  unit:'mg',  ampVol:2,   form:'süstelahus 2,5mg/ml' },
+  { id:'metop',       cat:'Antiarütmikumid',        name:'Metoprolool',     conc:1,    unit:'mg',  ampVol:5,   form:'süstelahus 1mg/ml' },
+  { id:'adenosiin',   cat:'Antiarütmikumid',        name:'Adenosiin',       conc:3,    unit:'mg',  ampVol:2,   form:'süstelahus 3mg/ml' },
+  { id:'amiodaroon',  cat:'Antiarütmikumid',        name:'Amiodaroon',      conc:50,   unit:'mg',  ampVol:3,   form:'infusioonikontsentraat 50mg/ml (150mg/3ml)' },
+  { id:'propafenoon', cat:'Antiarütmikumid',        name:'Propafenoon',     conc:3.5,  unit:'mg',  ampVol:20,  form:'süstelahus 3,5mg/ml' },
+  { id:'lidokaiin_iv',cat:'Antiarütmikumid',        name:'Lidokaiin (IV)',  conc:20,   unit:'mg',  ampVol:5,   form:'süstelahus 20mg/ml' },
+  { id:'magneesium',  cat:'Antiarütmikumid',        name:'Magneesiumsulfaat',conc:200, unit:'mg',  ampVol:10,  form:'süstelahus 200mg/ml (2g/10ml)' },
 
   // 5. Antihistamiinsed
-  { id:'klemastiin',  cat:'Antihistamiinsed',       name:'Klemastiin',      conc:1,    unit:'mg', ampVol:2,   form:'süstelahus 1mg/ml' },
+  { id:'klemastiin',  cat:'Antihistamiinsed',       name:'Klemastiin',      conc:1,    unit:'mg',  ampVol:2,   form:'süstelahus 1mg/ml' },
 
   // 6. Astmavastased
-  { id:'aminofyll',   cat:'Astmavastased',          name:'Aminofülliin',    conc:24,   unit:'mg', ampVol:10,  form:'süstelahus 24mg/ml (240mg/10ml)' },
+  { id:'aminofyll',   cat:'Astmavastased',          name:'Aminofülliin',    conc:24,   unit:'mg',  ampVol:10,  form:'süstelahus 24mg/ml (240mg/10ml)',
+    doseInfo:{ unit:'mg/kg/h', ranges:[0.3,0.5,0.7,1.0] } },
 
   // 7. Antikolinergilised
-  { id:'atropiin',    cat:'Antikolinergilised',     name:'Atropiin',        conc:1,    unit:'mg', ampVol:1,   form:'süstelahus 1mg/ml' },
+  { id:'atropiin',    cat:'Antikolinergilised',     name:'Atropiin',        conc:1,    unit:'mg',  ampVol:1,   form:'süstelahus 1mg/ml' },
 
-  // 9. Diureetikumid
-  { id:'furosemiid',  cat:'Diureetikumid',          name:'Furosemiid',      conc:10,   unit:'mg', ampVol:2,   form:'süstelahus 10mg/ml' },
+  // 8. Diureetikumid
+  { id:'furosemiid',  cat:'Diureetikumid',          name:'Furosemiid',      conc:10,   unit:'mg',  ampVol:2,   form:'süstelahus 10mg/ml' },
 
-  // 10. Epilepsiavastased
-  { id:'fenytoin',    cat:'Epilepsiavastased',      name:'Fenütoin',        conc:50,   unit:'mg', ampVol:5,   form:'süstelahus 50mg/ml' },
+  // 9. Epilepsiavastased
+  { id:'fenytoin',    cat:'Epilepsiavastased',      name:'Fenütoin',        conc:50,   unit:'mg',  ampVol:5,   form:'süstelahus 50mg/ml' },
 
-  // 11. Isheemiatõvevastased
-  { id:'nitro',       cat:'Isheemiatõvevastased',   name:'Nitroglütseriin', conc:1,    unit:'mg', ampVol:10,  form:'infusioonikontsentraat 1mg/ml' },
+  // 10. Isheemiatõvevastased
+  { id:'nitro',       cat:'Isheemiatõvevastased',   name:'Nitroglütseriin', conc:1,    unit:'mg',  ampVol:10,  form:'infusioonikontsentraat 1mg/ml',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.5,1,2,3,5] } },
 
-  // 13. AKE inhibiitorid
-  { id:'enalapriil',  cat:'AKE inhibiitorid',       name:'Enalapriil',      conc:1.25, unit:'mg', ampVol:1,   form:'süstelahus 1,25mg/ml' },
-  { id:'labetalool',  cat:'AKE inhibiitorid',       name:'Labetalool',      conc:5,    unit:'mg', ampVol:20,  form:'süstelahus 5mg/ml' },
+  // 11. Antihüpertensiivsed
+  { id:'enalapriil',  cat:'Antihüpertensiivsed',    name:'Enalapriil',      conc:1.25, unit:'mg',  ampVol:1,   form:'süstelahus 1,25mg/ml' },
+  { id:'labetalool',  cat:'Antihüpertensiivsed',    name:'Labetalool',      conc:5,    unit:'mg',  ampVol:20,  form:'süstelahus 5mg/ml' },
 
-  // 14. Kortikosteroidid
-  { id:'deksametasoon',cat:'Kortikosteroidid',      name:'Deksametasoon',   conc:4,    unit:'mg', ampVol:1,   form:'süstelahus 4mg/ml' },
-  { id:'prednisoloon', cat:'Kortikosteroidid',      name:'Prednisoloon',    conc:25,   unit:'mg', ampVol:5,   form:'süstelahus 25mg/ml' },
+  // 12. Kortikosteroidid
+  { id:'deksametasoon',cat:'Kortikosteroidid',      name:'Deksametasoon',   conc:4,    unit:'mg',  ampVol:1,   form:'süstelahus 4mg/ml' },
+  { id:'prednisoloon', cat:'Kortikosteroidid',      name:'Prednisoloon',    conc:25,   unit:'mg',  ampVol:5,   form:'süstelahus 25mg/ml' },
+  { id:'hüdrokortisoon',cat:'Kortikosteroidid',     name:'Hüdrokortisoon',  conc:50,   unit:'mg',  ampVol:2,   form:'süstelahus 50mg/ml (100mg/2ml)' },
 
-  // 19. Spasmolüütilised
-  { id:'drotaveriin', cat:'Spasmolüütilised',       name:'Drotaveriin',     conc:20,   unit:'mg', ampVol:2,   form:'süstelahus 20mg/ml' },
+  // 13. Elektrolüüdid
+  { id:'kaltsiumkl',  cat:'Elektrolüüdid',          name:'Kaltsiumkloriid', conc:100,  unit:'mg',  ampVol:10,  form:'süstelahus 100mg/ml (10% 10ml)' },
 
-  // 22. Tsentraalse toimega
-  { id:'klonidiin',   cat:'Tsentraalse toimega',    name:'Klonidiin',       conc:0.15, unit:'mg', ampVol:1,   form:'süstelahus 0,15mg/ml' },
-  { id:'deksmed',     cat:'Tsentraalse toimega',    name:'Deksmedetomidiin',conc:0.1,  unit:'mg', ampVol:2,   form:'süstelahus 0,1mg/ml' },
+  // 14. Inotroopsed
+  { id:'milrinoon',   cat:'Inotroopsed',            name:'Milrinoon',       conc:1,    unit:'mg',  ampVol:20,  form:'infusioonikontsentraat 1mg/ml (20mg/20ml)',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.25,0.375,0.5,0.75] } },
 
-  // 23. Trankvillisaatorid
-  { id:'diasepaam',   cat:'Trankvillisaatorid',     name:'Diasepaam',       conc:5,    unit:'mg', ampVol:2,   form:'süstelahus 5mg/ml' },
-  { id:'midasolaam',  cat:'Trankvillisaatorid',     name:'Midasolaam',      conc:5,    unit:'mg', ampVol:3,   form:'süstelahus 5mg/ml' },
+  // 15. Antikoagulandid
+  { id:'hepariin',    cat:'Antikoagulandid',        name:'Hepariin',        conc:5000, unit:'IU',  ampVol:1,   form:'süstelahus 5000IU/ml',
+    doseInfo:{ unit:'IU/kg/h', ranges:[10,15,18,20,25] } },
 
-  // 24. Valuvaigistid
-  { id:'morfiin',     cat:'Valuvaigistid',          name:'Morfiin',         conc:10,   unit:'mg', ampVol:1,   form:'süstelahus 10mg/ml' },
-  { id:'fentanüül',   cat:'Valuvaigistid',          name:'Fentanüül',       conc:0.05, unit:'mg', ampVol:2,   form:'süstelahus 0,05mg/ml (50mcg/ml)' },
-  { id:'tramadool',   cat:'Valuvaigistid',          name:'Tramadool',       conc:50,   unit:'mg', ampVol:2,   form:'süstelahus 50mg/ml' },
-  { id:'petidiin',    cat:'Valuvaigistid',          name:'Petidiin',        conc:50,   unit:'mg', ampVol:2,   form:'süstelahus 50mg/ml' },
+  // 16. Hemostaatikumid
+  { id:'txa',         cat:'Hemostaatikumid',        name:'Traneksaamhape',  conc:100,  unit:'mg',  ampVol:5,   form:'süstelahus 100mg/ml (500mg/5ml)' },
 
-  // 25. Müorelaksandid
-  { id:'suks',        cat:'Müorelaksandid',         name:'Suksametoonium',  conc:20,   unit:'mg', ampVol:5,   form:'süstelahus 20mg/ml' },
-  { id:'pipekuroon',  cat:'Müorelaksandid',         name:'Pipekurooniumbromiid',conc:4,unit:'mg', ampVol:2,   form:'süstelahus 4mg/ml' },
+  // 17. Spasmolüütilised
+  { id:'drotaveriin', cat:'Spasmolüütilised',       name:'Drotaveriin',     conc:20,   unit:'mg',  ampVol:2,   form:'süstelahus 20mg/ml' },
 
-  // 26. Üldanesteetikumid
-  { id:'ketamiin',    cat:'Üldanesteetikumid',      name:'Ketamiin',        conc:50,   unit:'mg', ampVol:10,  form:'süstelahus 50mg/ml' },
-  { id:'propofool',   cat:'Üldanesteetikumid',      name:'Propofool',       conc:10,   unit:'mg', ampVol:20,  form:'emulsioon 10mg/ml' },
+  // 18. Tsentraalse toimega
+  { id:'klonidiin',   cat:'Tsentraalse toimega',    name:'Klonidiin',       conc:0.15, unit:'mg',  ampVol:1,   form:'süstelahus 0,15mg/ml' },
+  { id:'deksmed',     cat:'Tsentraalse toimega',    name:'Deksmedetomidiin',conc:0.1,  unit:'mg',  ampVol:2,   form:'süstelahus 0,1mg/ml',
+    doseInfo:{ unit:'mcg/kg/h', ranges:[0.2,0.4,0.7,1.0,1.4] } },
+
+  // 19. Trankvillisaatorid
+  { id:'diasepaam',   cat:'Trankvillisaatorid',     name:'Diasepaam',       conc:5,    unit:'mg',  ampVol:2,   form:'süstelahus 5mg/ml' },
+  { id:'midasolaam',  cat:'Trankvillisaatorid',     name:'Midasolaam',      conc:5,    unit:'mg',  ampVol:3,   form:'süstelahus 5mg/ml',
+    doseInfo:{ unit:'mg/kg/h', ranges:[0.02,0.05,0.1] } },
+
+  // 20. Valuvaigistid
+  { id:'morfiin',     cat:'Valuvaigistid',          name:'Morfiin',         conc:10,   unit:'mg',  ampVol:1,   form:'süstelahus 10mg/ml',
+    doseInfo:{ unit:'mg/kg/h', ranges:[0.01,0.03,0.05,0.1] } },
+  { id:'fentanüül',   cat:'Valuvaigistid',          name:'Fentanüül',       conc:0.05, unit:'mg',  ampVol:2,   form:'süstelahus 0,05mg/ml (50mcg/ml)',
+    doseInfo:{ unit:'mcg/kg/h', ranges:[1,2,3,5] } },
+  { id:'tramadool',   cat:'Valuvaigistid',          name:'Tramadool',       conc:50,   unit:'mg',  ampVol:2,   form:'süstelahus 50mg/ml' },
+  { id:'petidiin',    cat:'Valuvaigistid',          name:'Petidiin',        conc:50,   unit:'mg',  ampVol:2,   form:'süstelahus 50mg/ml' },
+
+  // 21. Müorelaksandid
+  { id:'suks',        cat:'Müorelaksandid',         name:'Suksametoonium',  conc:20,   unit:'mg',  ampVol:5,   form:'süstelahus 20mg/ml' },
+  { id:'rokuronium',  cat:'Müorelaksandid',         name:'Rokuronium',      conc:10,   unit:'mg',  ampVol:5,   form:'süstelahus 10mg/ml' },
+  { id:'pipekuroon',  cat:'Müorelaksandid',         name:'Pipekurooniumbromiid',conc:4,unit:'mg',  ampVol:2,   form:'süstelahus 4mg/ml' },
+
+  // 22. Üldanesteetikumid
+  { id:'ketamiin',    cat:'Üldanesteetikumid',      name:'Ketamiin',        conc:50,   unit:'mg',  ampVol:10,  form:'süstelahus 50mg/ml' },
+  { id:'propofool',   cat:'Üldanesteetikumid',      name:'Propofool',       conc:10,   unit:'mg',  ampVol:20,  form:'emulsioon 10mg/ml',
+    doseInfo:{ unit:'mg/kg/h', ranges:[1,2,3,4] } },
+
+  // 23. Endokrinoloogilised
+  { id:'insuliin',    cat:'Endokrinoloogilised',    name:'Insuliin (Actrapid)',conc:100,unit:'IU',  ampVol:10,  form:'süstelahus 100IU/ml',
+    doseInfo:{ unit:'IU/kg/h', ranges:[0.05,0.07,0.1] } },
 ];
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -344,7 +434,7 @@ function setCustomSyringe() {
   }
 }
 
-// ─── KALKULATSIOON ────────────────────────────────────────────────────────────
+// ─── ABIFINKTSIOONID ──────────────────────────────────────────────────────────
 function fmtNum(n) {
   if (!isFinite(n) || n === 0) return '0';
   if (n >= 1000) return n.toFixed(0);
@@ -354,34 +444,79 @@ function fmtNum(n) {
   return n.toPrecision(3);
 }
 
+function fmtRate(r) {
+  if (!isFinite(r) || r <= 0) return '—';
+  if (r >= 100) return r.toFixed(0);
+  if (r >= 10)  return r.toFixed(1);
+  return r.toFixed(2);
+}
+
+// Arvuta infusioonikiirus (ml/h)
+// finalConc: ravimi natiivsetes ühikutes/ml (mg/ml või IU/ml)
+function calcRate(dose, doseUnit, weight, finalConc) {
+  if (!finalConc || finalConc <= 0) return null;
+  switch (doseUnit) {
+    case 'mcg/kg/min': return (dose * weight * 60) / (finalConc * 1000);
+    case 'mcg/kg/h':   return (dose * weight)      / (finalConc * 1000);
+    case 'mg/kg/h':    return (dose * weight)      / finalConc;
+    case 'IU/kg/h':    return (dose * weight)      / finalConc;
+    default: return null;
+  }
+}
+
+function buildDoseTable(drug, finalConc, weight) {
+  const { unit: doseUnit, ranges } = drug.doseInfo;
+  const rows = ranges.map(dose => {
+    const rate = calcRate(dose, doseUnit, weight, finalConc);
+    return `<div class="dose-row">
+      <span class="dose-val">${dose}</span>
+      <span class="dose-unit-cell">${doseUnit}</span>
+      <span class="dose-rate-val">${fmtRate(rate)} ml/h</span>
+    </div>`;
+  }).join('');
+  return `<div class="dose-table">
+    <div class="dose-table-title">Annuse tabel — ${weight} kg patsient</div>
+    <div class="dose-table-head">
+      <span>Annus</span><span>Ühik</span><span style="text-align:right">ml/h</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+// ─── KALKULATSIOON ────────────────────────────────────────────────────────────
 function calculate() {
   const mainEl  = document.getElementById('resultMain');
   const rowsEl  = document.getElementById('resultRows');
+  const doseEl  = document.getElementById('doseTableSection');
+  const printBtn= document.getElementById('printBtn');
   const syrVol  = state.syringeVol;
+  const weight  = parseFloat(document.getElementById('patientWeight').value) || null;
 
-  let totalAmt = null;   // kogus (mg/mcg/g)
+  let totalAmt = null;
   let unit = 'mg';
-  let stockConc = null;  // mg/ml laos
-  let stockVol  = null;  // ml laos
+  let stockConc = null;
+  let stockVol  = null;
 
   if (state.drug && !state.manualMode) {
-    const d     = state.drug;
-    const nAmp  = parseFloat(document.getElementById('ampoules').value) || 1;
-    totalAmt    = d.conc * d.ampVol * nAmp;
-    unit        = d.unit;
-    stockConc   = d.conc;
-    stockVol    = d.ampVol * nAmp;
+    const d    = state.drug;
+    const nAmp = parseFloat(document.getElementById('ampoules').value) || 1;
+    totalAmt   = d.conc * d.ampVol * nAmp;
+    unit       = d.unit;
+    stockConc  = d.conc;
+    stockVol   = d.ampVol * nAmp;
   } else if (state.manualMode && state.manualAmt && state.manualVol) {
-    totalAmt    = state.manualAmt;
-    unit        = state.unit;
-    stockConc   = state.manualAmt / state.manualVol;
-    stockVol    = state.manualVol;
+    totalAmt   = state.manualAmt;
+    unit       = state.unit;
+    stockConc  = state.manualAmt / state.manualVol;
+    stockVol   = state.manualVol;
   }
 
   if (totalAmt === null || !syrVol) {
     mainEl.className = 'empty-state';
     mainEl.textContent = 'Vali ravim ja süstla maht';
     rowsEl.style.display = 'none';
+    doseEl.style.display = 'none';
+    printBtn.style.display = 'none';
     return;
   }
 
@@ -391,15 +526,13 @@ function calculate() {
   mainEl.innerHTML = `${fmtNum(finalConc)} <span class="result-unit">${unit}/ml</span>`;
 
   const rows = [];
-
   if (stockConc !== null) {
     rows.push({ label: 'Lähtelahus', val: `${fmtNum(stockConc)} ${unit}/ml (${fmtNum(stockVol)} ml)` });
   }
   rows.push({ label: 'Ravimi kogus kokku', val: `${fmtNum(totalAmt)} ${unit}`, hi: true });
-  rows.push({ label: `Süstla maht`, val: `${syrVol} ml` });
+  rows.push({ label: 'Süstla maht', val: `${syrVol} ml` });
   rows.push({ label: '→ Kontsentratsioon', val: `${fmtNum(finalConc)} ${unit}/ml`, hi: true });
   rows.push({ label: '→ 10 ml sisaldab', val: `${fmtNum(finalConc * 10)} ${unit}` });
-
   if (stockVol && stockVol > syrVol) {
     rows.push({ label: '⚠ Hoiatus', val: `Lahuse maht (${fmtNum(stockVol)}ml) > süstla maht!`, warn: true });
   }
@@ -411,9 +544,18 @@ function calculate() {
     </div>`
   ).join('');
   rowsEl.style.display = 'flex';
+
+  // Annuse tabel
+  if (weight && state.drug && state.drug.doseInfo && !state.manualMode) {
+    doseEl.innerHTML = buildDoseTable(state.drug, finalConc, weight);
+    doseEl.style.display = 'block';
+  } else {
+    doseEl.style.display = 'none';
+  }
+
+  printBtn.style.display = 'block';
 }
 
-// Algväärtusta
 calculate();
 </script>
 </body>
