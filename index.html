@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiirabi Ravimiäpp</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:#0b1220;color:#e2e8f0;min-height:100vh;padding:20px 12px 40px}
+
+    h1{text-align:center;font-size:1.4rem;font-weight:800;color:#38bdf8;margin-bottom:4px;letter-spacing:.3px}
+    .subtitle{text-align:center;font-size:.75rem;color:#475569;margin-bottom:24px}
+
+    .card{background:#1a2540;border:1px solid #2a3a5c;border-radius:14px;padding:18px;max-width:500px;margin:0 auto 14px}
+    .card-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#64748b;margin-bottom:16px;display:flex;align-items:center;gap:6px}
+    .card-title span{background:#0ea5e9;color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;flex-shrink:0}
+
+    label{display:block;font-size:.75rem;color:#94a3b8;margin-bottom:5px;font-weight:500}
+    .field{margin-bottom:14px}
+
+    input[type=number],input[type=text]{width:100%;background:#0b1220;border:1px solid #2a3a5c;border-radius:9px;color:#e2e8f0;font-size:1rem;padding:9px 12px;outline:none;transition:border-color .2s}
+    input:focus{border-color:#38bdf8}
+    input[type=number]{-moz-appearance:textfield}
+    input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+    .drug-search-wrap{position:relative}
+    #drugSearch{padding-right:36px;font-size:.9rem}
+    .clear-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#475569;cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1}
+    .clear-btn:hover{color:#e2e8f0}
+
+    .drug-dropdown{position:absolute;z-index:100;width:100%;background:#1a2540;border:1px solid #2a3a5c;border-radius:9px;margin-top:4px;max-height:260px;overflow-y:auto;box-shadow:0 8px 32px #000a}
+    .drug-item{padding:9px 12px;cursor:pointer;border-bottom:1px solid #1a2540;transition:background .1s}
+    .drug-item:hover,.drug-item.focused{background:#223058}
+    .drug-item-name{font-size:.88rem;font-weight:600;color:#e2e8f0}
+    .drug-item-sub{font-size:.73rem;color:#64748b;margin-top:2px}
+    .drug-cat{padding:5px 12px;font-size:.65rem;text-transform:uppercase;letter-spacing:1px;color:#38bdf8;background:#0f1c35;font-weight:700}
+    .no-results{padding:12px;font-size:.82rem;color:#475569;text-align:center}
+
+    .chip-row{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{background:#0b1220;border:1px solid #2a3a5c;border-radius:20px;color:#64748b;font-size:.78rem;font-weight:600;padding:5px 12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .chip.active{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+    .chip:not(.active):hover{border-color:#38bdf8;color:#e2e8f0}
+
+    .input-row{display:flex;gap:8px;align-items:flex-start}
+    .input-row input{flex:1}
+    .unit-badge{background:#0ea5e9;color:#fff;border-radius:7px;padding:9px 10px;font-size:.8rem;font-weight:700;white-space:nowrap;align-self:stretch;display:flex;align-items:center}
+
+    .info-box{background:#0b1220;border:1px solid #2a3a5c;border-radius:9px;padding:10px 12px;font-size:.78rem;color:#94a3b8;line-height:1.6;margin-bottom:14px}
+    .info-box strong{color:#38bdf8}
+
+    .result-card{background:linear-gradient(135deg,#0c3a5e,#0a2d4a);border:1px solid #0369a1;border-radius:14px;padding:22px 18px 18px;max-width:500px;margin:0 auto 14px;text-align:center}
+    .result-label{font-size:.68rem;text-transform:uppercase;letter-spacing:1.2px;color:#7dd3fc;margin-bottom:8px}
+    .result-main{font-size:3rem;font-weight:900;color:#fff;line-height:1;margin-bottom:4px}
+    .result-unit{font-size:.95rem;color:#7dd3fc;font-weight:500;margin-bottom:14px}
+    .result-rows{text-align:left;border-top:1px solid rgba(56,189,248,.2);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+    .result-row{display:flex;justify-content:space-between;align-items:center;font-size:.78rem}
+    .result-row-label{color:#64748b}
+    .result-row-val{color:#e2e8f0;font-weight:600}
+    .result-row-val.highlight{color:#38bdf8;font-size:.92rem;font-weight:700}
+
+    .empty-state{color:#334155;font-size:1rem;padding:12px 0}
+
+    .warn-box{background:#2d1a00;border:1px solid #92400e;border-radius:10px;padding:10px 14px;font-size:.73rem;color:#fbbf24;max-width:500px;margin:0 auto 14px;text-align:center;line-height:1.5}
+
+    .manual-toggle{font-size:.72rem;color:#38bdf8;cursor:pointer;text-decoration:underline;margin-top:6px;display:inline-block}
+
+    /* Dose table */
+    .dose-table{border-top:1px solid rgba(56,189,248,.2);margin-top:14px;padding-top:14px;text-align:left}
+    .dose-table-title{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:#7dd3fc;margin-bottom:10px;font-weight:700}
+    .dose-table-head{display:grid;grid-template-columns:1fr 1.6fr 1fr;font-size:.65rem;color:#475569;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;padding:0 4px}
+    .dose-row{display:grid;grid-template-columns:1fr 1.6fr 1fr;font-size:.8rem;padding:5px 4px;border-radius:6px;align-items:center}
+    .dose-row:nth-child(odd){background:rgba(255,255,255,.03)}
+    .dose-val{font-weight:700;color:#e2e8f0}
+    .dose-unit-cell{color:#64748b;font-size:.72rem}
+    .dose-rate-val{font-weight:700;color:#38bdf8;text-align:right}
+
+    /* Print button */
+    .print-btn{display:block;margin:14px auto 0;background:none;border:1px solid #334155;border-radius:9px;color:#94a3b8;font-size:.8rem;padding:8px 18px;cursor:pointer;transition:all .15s;max-width:500px;width:100%}
+    .print-btn:hover{border-color:#38bdf8;color:#38bdf8}
+
+    /* Print styles */
+    @media print {
+      body{background:#fff;color:#111;padding:12px}
+      h1{color:#0369a1}
+      .subtitle{color:#555}
+      .card{background:#f8fafc;border:1px solid #cbd5e1;box-shadow:none}
+      .card-title{color:#475569}
+      .card-title span{background:#0369a1}
+      .info-box{background:#f1f5f9;border:1px solid #cbd5e1;color:#475569}
+      .info-box strong{color:#0369a1}
+      input,select{background:#fff;border:1px solid #cbd5e1;color:#111}
+      .result-card{background:linear-gradient(135deg,#e0f2fe,#f0f9ff);border:1px solid #0369a1}
+      .result-label{color:#0369a1}
+      .result-main{color:#0c4a6e}
+      .result-unit{color:#0369a1}
+      .result-row-label{color:#475569}
+      .result-row-val{color:#111}
+      .result-row-val.highlight{color:#0369a1}
+      .dose-table-title{color:#0369a1}
+      .dose-unit-cell{color:#475569}
+      .dose-rate-val{color:#0369a1}
+      .warn-box{background:#fffbeb;border:1px solid #f59e0b;color:#92400e}
+      .drug-dropdown,.clear-btn,.manual-toggle,.print-btn,#manualSection,.chip-row{display:none!important}
+      #drugSearch{border:none;font-size:1rem;font-weight:700;padding:0}
+      .chip.active::after{content:' ✓'}
+    }
+  </style>
+</head>
+<body>
+
+<h1>Kiirabi Ravimiäpp</h1>
+<p class="subtitle">Perfusiooni kontsentratsiooni kalkulaator</p>
+
+<!-- 1. Ravim -->
+<div class="card">
+  <div class="card-title"><span>1</span> Ravim</div>
+
+  <div class="field">
+    <label>Otsi ravimit</label>
+    <div class="drug-search-wrap">
+      <input type="text" id="drugSearch" placeholder="nt Morfiin, Dopamiin..." autocomplete="off"
+             oninput="filterDrugs()" onfocus="showDropdown()" />
+      <button class="clear-btn" onclick="clearDrug()" title="Tühjenda">✕</button>
+      <div class="drug-dropdown" id="drugDropdown" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="info-box" id="drugInfo" style="display:none"></div>
+
+  <div class="field">
+    <label>Ampullide arv</label>
+    <div class="input-row">
+      <input type="number" id="ampoules" value="1" min="0.5" step="0.5" oninput="calculate()" />
+      <div class="unit-badge" id="ampouleInfo">ampull</div>
+    </div>
+    <span class="manual-toggle" onclick="toggleManual()">Või sisesta kogus käsitsi ▾</span>
+  </div>
+
+  <div id="manualSection" style="display:none">
+    <div class="field">
+      <label>Kogus käsitsi</label>
+      <div class="input-row">
+        <input type="number" id="manualAmt" placeholder="nt 500" min="0" step="any" oninput="useManual()" />
+        <div class="chip-row" id="unitChips" style="flex:none">
+          <div class="chip active" onclick="setUnit('mg',this)">mg</div>
+          <div class="chip" onclick="setUnit('mcg',this)">mcg</div>
+          <div class="chip" onclick="setUnit('g',this)">g</div>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Lahuse maht (ml)</label>
+      <input type="number" id="manualVol" placeholder="nt 10" min="0.1" step="any" oninput="useManual()" />
+    </div>
+  </div>
+</div>
+
+<!-- 2. Süstal -->
+<div class="card">
+  <div class="card-title"><span>2</span> Perfuusori süstal</div>
+  <div class="field">
+    <label>Süstla maht</label>
+    <div class="chip-row" id="syringeChips">
+      <div class="chip" onclick="setSyringe(5,this)">5 ml</div>
+      <div class="chip" onclick="setSyringe(10,this)">10 ml</div>
+      <div class="chip active" onclick="setSyringe(20,this)">20 ml</div>
+      <div class="chip" onclick="setSyringe(50,this)">50 ml</div>
+    </div>
+  </div>
+  <div class="field" style="margin-bottom:0">
+    <label>Kohandatud maht</label>
+    <div class="input-row">
+      <input type="number" id="customSyr" placeholder="muu" min="1" step="any" oninput="setCustomSyringe()" />
+      <div class="unit-badge">ml</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Patsient -->
+<div class="card">
+  <div class="card-title"><span>3</span> Patsient <span style="background:#334155;font-size:.6rem;padding:2px 6px;border-radius:4px;letter-spacing:.5px;width:auto;height:auto;border-radius:4px">valikuline</span></div>
+  <div class="field" style="margin-bottom:0">
+    <label>Kehakaal — kaalupõhiste annuste tabeliks</label>
+    <div class="input-row">
+      <input type="number" id="patientWeight" placeholder="nt 70" min="1" max="300" step="0.5" oninput="calculate()" />
+      <div class="unit-badge">kg</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tulemus -->
+<div class="result-card" id="resultCard">
+  <div class="result-label">Kontsentratsioon süstlas</div>
+  <div id="resultMain" class="empty-state">Vali ravim ja süstla maht</div>
+  <div id="resultRows" class="result-rows" style="display:none"></div>
+  <div id="doseTableSection" style="display:none"></div>
+</div>
+
+<div class="warn-box">⚠ Kontrolli annused alati ametlike protokollide ja ravimijuhistega.</div>
+
+<button class="print-btn" id="printBtn" onclick="window.print()" style="display:none">🖨 Prindi / Salvesta PDF</button>
+
+<script>
+// ─── RAVIMITE ANDMEBAAS ──────────────────────────────────────────────────────
+// doseInfo: { unit: 'mcg/kg/min'|'mcg/kg/h'|'mg/kg/h'|'IU/kg/h', ranges: [...] }
+const DRUGS = [
+  // 1. Adrenenergilised ained
+  { id:'dopamiin',    cat:'Adrenenergilised ained', name:'Dopamiin',        conc:40,   unit:'mg',  ampVol:5,   form:'infusioonikontsentraat 200mg/5ml',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[2,5,10,15,20] } },
+  { id:'dobutamiin',  cat:'Adrenenergilised ained', name:'Dobutamiin',      conc:12.5, unit:'mg',  ampVol:20,  form:'infusioonikontsentraat 12,5mg/ml (250mg/20ml)',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[2,5,10,15,20] } },
+  { id:'epi',         cat:'Adrenenergilised ained', name:'Epinefriin',      conc:1,    unit:'mg',  ampVol:1,   form:'süstelahus 1mg/ml',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.01,0.05,0.1,0.3,0.5] } },
+  { id:'norepi',      cat:'Adrenenergilised ained', name:'Norepinefriin',   conc:1,    unit:'mg',  ampVol:4,   form:'süstelahus 1mg/ml (4ml ampull)',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.01,0.05,0.1,0.3,0.5] } },
+  { id:'isoprot',     cat:'Adrenenergilised ained', name:'Isoproterinool',  conc:0.2,  unit:'mg',  ampVol:5,   form:'süstelahus 0,2mg/ml',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.01,0.03,0.05,0.1] } },
+  { id:'vasopressiin',cat:'Adrenenergilised ained', name:'Vasopressiin',    conc:20,   unit:'IU',  ampVol:1,   form:'süstelahus 20IU/ml' },
+
+  // 2. Antidoodid
+  { id:'naloksoon',   cat:'Antidoodid',             name:'Naloksoon',       conc:0.4,  unit:'mg',  ampVol:1,   form:'süstelahus 0,4mg/ml' },
+  { id:'flumaseniil', cat:'Antidoodid',             name:'Flumaseniil',     conc:0.5,  unit:'mg',  ampVol:1,   form:'süstelahus 0,5mg/ml' },
+
+  // 3. Antipsühhootilised
+  { id:'halop',       cat:'Antipsühhootilised',     name:'Haloperidool',    conc:5,    unit:'mg',  ampVol:1,   form:'süstelahus 5mg/ml' },
+
+  // 4. Antiarütmikumid
+  { id:'verapamiil',  cat:'Antiarütmikumid',        name:'Verapamiil',      conc:2.5,  unit:'mg',  ampVol:2,   form:'süstelahus 2,5mg/ml' },
+  { id:'metop',       cat:'Antiarütmikumid',        name:'Metoprolool',     conc:1,    unit:'mg',  ampVol:5,   form:'süstelahus 1mg/ml' },
+  { id:'adenosiin',   cat:'Antiarütmikumid',        name:'Adenosiin',       conc:3,    unit:'mg',  ampVol:2,   form:'süstelahus 3mg/ml' },
+  { id:'amiodaroon',  cat:'Antiarütmikumid',        name:'Amiodaroon',      conc:50,   unit:'mg',  ampVol:3,   form:'infusioonikontsentraat 50mg/ml (150mg/3ml)' },
+  { id:'propafenoon', cat:'Antiarütmikumid',        name:'Propafenoon',     conc:3.5,  unit:'mg',  ampVol:20,  form:'süstelahus 3,5mg/ml' },
+  { id:'lidokaiin_iv',cat:'Antiarütmikumid',        name:'Lidokaiin (IV)',  conc:20,   unit:'mg',  ampVol:5,   form:'süstelahus 20mg/ml' },
+  { id:'magneesium',  cat:'Antiarütmikumid',        name:'Magneesiumsulfaat',conc:200, unit:'mg',  ampVol:10,  form:'süstelahus 200mg/ml (2g/10ml)' },
+
+  // 5. Antihistamiinsed
+  { id:'klemastiin',  cat:'Antihistamiinsed',       name:'Klemastiin',      conc:1,    unit:'mg',  ampVol:2,   form:'süstelahus 1mg/ml' },
+
+  // 6. Astmavastased
+  { id:'aminofyll',   cat:'Astmavastased',          name:'Aminofülliin',    conc:24,   unit:'mg',  ampVol:10,  form:'süstelahus 24mg/ml (240mg/10ml)',
+    doseInfo:{ unit:'mg/kg/h', ranges:[0.3,0.5,0.7,1.0] } },
+
+  // 7. Antikolinergilised
+  { id:'atropiin',    cat:'Antikolinergilised',     name:'Atropiin',        conc:1,    unit:'mg',  ampVol:1,   form:'süstelahus 1mg/ml' },
+
+  // 8. Diureetikumid
+  { id:'furosemiid',  cat:'Diureetikumid',          name:'Furosemiid',      conc:10,   unit:'mg',  ampVol:2,   form:'süstelahus 10mg/ml' },
+
+  // 9. Epilepsiavastased
+  { id:'fenytoin',    cat:'Epilepsiavastased',      name:'Fenütoin',        conc:50,   unit:'mg',  ampVol:5,   form:'süstelahus 50mg/ml' },
+
+  // 10. Isheemiatõvevastased
+  { id:'nitro',       cat:'Isheemiatõvevastased',   name:'Nitroglütseriin', conc:1,    unit:'mg',  ampVol:10,  form:'infusioonikontsentraat 1mg/ml',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.5,1,2,3,5] } },
+
+  // 11. Antihüpertensiivsed
+  { id:'enalapriil',  cat:'Antihüpertensiivsed',    name:'Enalapriil',      conc:1.25, unit:'mg',  ampVol:1,   form:'süstelahus 1,25mg/ml' },
+  { id:'labetalool',  cat:'Antihüpertensiivsed',    name:'Labetalool',      conc:5,    unit:'mg',  ampVol:20,  form:'süstelahus 5mg/ml' },
+
+  // 12. Kortikosteroidid
+  { id:'deksametasoon',cat:'Kortikosteroidid',      name:'Deksametasoon',   conc:4,    unit:'mg',  ampVol:1,   form:'süstelahus 4mg/ml' },
+  { id:'prednisoloon', cat:'Kortikosteroidid',      name:'Prednisoloon',    conc:25,   unit:'mg',  ampVol:5,   form:'süstelahus 25mg/ml' },
+  { id:'hüdrokortisoon',cat:'Kortikosteroidid',     name:'Hüdrokortisoon',  conc:50,   unit:'mg',  ampVol:2,   form:'süstelahus 50mg/ml (100mg/2ml)' },
+
+  // 13. Elektrolüüdid
+  { id:'kaltsiumkl',  cat:'Elektrolüüdid',          name:'Kaltsiumkloriid', conc:100,  unit:'mg',  ampVol:10,  form:'süstelahus 100mg/ml (10% 10ml)' },
+
+  // 14. Inotroopsed
+  { id:'milrinoon',   cat:'Inotroopsed',            name:'Milrinoon',       conc:1,    unit:'mg',  ampVol:20,  form:'infusioonikontsentraat 1mg/ml (20mg/20ml)',
+    doseInfo:{ unit:'mcg/kg/min', ranges:[0.25,0.375,0.5,0.75] } },
+
+  // 15. Antikoagulandid
+  { id:'hepariin',    cat:'Antikoagulandid',        name:'Hepariin',        conc:5000, unit:'IU',  ampVol:1,   form:'süstelahus 5000IU/ml',
+    doseInfo:{ unit:'IU/kg/h', ranges:[10,15,18,20,25] } },
+
+  // 16. Hemostaatikumid
+  { id:'txa',         cat:'Hemostaatikumid',        name:'Traneksaamhape',  conc:100,  unit:'mg',  ampVol:5,   form:'süstelahus 100mg/ml (500mg/5ml)' },
+
+  // 17. Spasmolüütilised
+  { id:'drotaveriin', cat:'Spasmolüütilised',       name:'Drotaveriin',     conc:20,   unit:'mg',  ampVol:2,   form:'süstelahus 20mg/ml' },
+
+  // 18. Tsentraalse toimega
+  { id:'klonidiin',   cat:'Tsentraalse toimega',    name:'Klonidiin',       conc:0.15, unit:'mg',  ampVol:1,   form:'süstelahus 0,15mg/ml' },
+  { id:'deksmed',     cat:'Tsentraalse toimega',    name:'Deksmedetomidiin',conc:0.1,  unit:'mg',  ampVol:2,   form:'süstelahus 0,1mg/ml',
+    doseInfo:{ unit:'mcg/kg/h', ranges:[0.2,0.4,0.7,1.0,1.4] } },
+
+  // 19. Trankvillisaatorid
+  { id:'diasepaam',   cat:'Trankvillisaatorid',     name:'Diasepaam',       conc:5,    unit:'mg',  ampVol:2,   form:'süstelahus 5mg/ml' },
+  { id:'midasolaam',  cat:'Trankvillisaatorid',     name:'Midasolaam',      conc:5,    unit:'mg',  ampVol:3,   form:'süstelahus 5mg/ml',
+    doseInfo:{ unit:'mg/kg/h', ranges:[0.02,0.05,0.1] } },
+
+  // 20. Valuvaigistid
+  { id:'morfiin',     cat:'Valuvaigistid',          name:'Morfiin',         conc:10,   unit:'mg',  ampVol:1,   form:'süstelahus 10mg/ml',
+    doseInfo:{ unit:'mg/kg/h', ranges:[0.01,0.03,0.05,0.1] } },
+  { id:'fentanüül',   cat:'Valuvaigistid',          name:'Fentanüül',       conc:0.05, unit:'mg',  ampVol:2,   form:'süstelahus 0,05mg/ml (50mcg/ml)',
+    doseInfo:{ unit:'mcg/kg/h', ranges:[1,2,3,5] } },
+  { id:'tramadool',   cat:'Valuvaigistid',          name:'Tramadool',       conc:50,   unit:'mg',  ampVol:2,   form:'süstelahus 50mg/ml' },
+  { id:'petidiin',    cat:'Valuvaigistid',          name:'Petidiin',        conc:50,   unit:'mg',  ampVol:2,   form:'süstelahus 50mg/ml' },
+
+  // 21. Müorelaksandid
+  { id:'suks',        cat:'Müorelaksandid',         name:'Suksametoonium',  conc:20,   unit:'mg',  ampVol:5,   form:'süstelahus 20mg/ml' },
+  { id:'rokuronium',  cat:'Müorelaksandid',         name:'Rokuronium',      conc:10,   unit:'mg',  ampVol:5,   form:'süstelahus 10mg/ml' },
+  { id:'pipekuroon',  cat:'Müorelaksandid',         name:'Pipekurooniumbromiid',conc:4,unit:'mg',  ampVol:2,   form:'süstelahus 4mg/ml' },
+
+  // 22. Üldanesteetikumid
+  { id:'ketamiin',    cat:'Üldanesteetikumid',      name:'Ketamiin',        conc:50,   unit:'mg',  ampVol:10,  form:'süstelahus 50mg/ml' },
+  { id:'propofool',   cat:'Üldanesteetikumid',      name:'Propofool',       conc:10,   unit:'mg',  ampVol:20,  form:'emulsioon 10mg/ml',
+    doseInfo:{ unit:'mg/kg/h', ranges:[1,2,3,4] } },
+
+  // 23. Endokrinoloogilised
+  { id:'insuliin',    cat:'Endokrinoloogilised',    name:'Insuliin (Actrapid)',conc:100,unit:'IU',  ampVol:10,  form:'süstelahus 100IU/ml',
+    doseInfo:{ unit:'IU/kg/h', ranges:[0.05,0.07,0.1] } },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  drug: null,
+  syringeVol: 20,
+  manualMode: false,
+  manualAmt: null,
+  manualVol: null,
+  unit: 'mg',
+};
+
+// ─── DROPDOWN ─────────────────────────────────────────────────────────────────
+function filterDrugs() {
+  state.drug = null;
+  document.getElementById('drugInfo').style.display = 'none';
+  showDropdown();
+  calculate();
+}
+
+function showDropdown() {
+  const q = document.getElementById('drugSearch').value.trim().toLowerCase();
+  const dd = document.getElementById('drugDropdown');
+  const filtered = q
+    ? DRUGS.filter(d => d.name.toLowerCase().includes(q) || d.cat.toLowerCase().includes(q))
+    : DRUGS;
+
+  if (!filtered.length) {
+    dd.innerHTML = '<div class="no-results">Ravimit ei leitud</div>';
+    dd.style.display = 'block';
+    return;
+  }
+
+  let html = '';
+  let lastCat = '';
+  filtered.forEach(d => {
+    if (d.cat !== lastCat) {
+      html += `<div class="drug-cat">${d.cat}</div>`;
+      lastCat = d.cat;
+    }
+    html += `<div class="drug-item" onclick="selectDrug('${d.id}')">
+      <div class="drug-item-name">${d.name}</div>
+      <div class="drug-item-sub">${d.form}</div>
+    </div>`;
+  });
+
+  dd.innerHTML = html;
+  dd.style.display = 'block';
+}
+
+function selectDrug(id) {
+  const d = DRUGS.find(x => x.id === id);
+  if (!d) return;
+  state.drug = d;
+  state.manualMode = false;
+
+  document.getElementById('drugSearch').value = d.name;
+  document.getElementById('drugDropdown').style.display = 'none';
+  document.getElementById('manualSection').style.display = 'none';
+
+  const ampAmt = d.conc * d.ampVol;
+  document.getElementById('drugInfo').innerHTML =
+    `<strong>${d.name}</strong> — ${d.form}<br>
+     1 ampull = <strong>${fmtNum(ampAmt)} ${d.unit}</strong> / ${d.ampVol} ml
+     (${d.conc} ${d.unit}/ml)`;
+  document.getElementById('drugInfo').style.display = 'block';
+  document.getElementById('ampouleInfo').textContent = `× ${fmtNum(ampAmt)}${d.unit}/${d.ampVol}ml`;
+
+  calculate();
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.drug-search-wrap')) {
+    document.getElementById('drugDropdown').style.display = 'none';
+  }
+});
+
+function clearDrug() {
+  state.drug = null;
+  document.getElementById('drugSearch').value = '';
+  document.getElementById('drugInfo').style.display = 'none';
+  document.getElementById('ampouleInfo').textContent = 'ampull';
+  document.getElementById('drugDropdown').style.display = 'none';
+  calculate();
+}
+
+// ─── MANUAL MODE ──────────────────────────────────────────────────────────────
+function toggleManual() {
+  const sec = document.getElementById('manualSection');
+  sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+}
+
+function useManual() {
+  state.manualMode = true;
+  state.manualAmt = parseFloat(document.getElementById('manualAmt').value) || null;
+  state.manualVol = parseFloat(document.getElementById('manualVol').value) || null;
+  calculate();
+}
+
+function setUnit(u, el) {
+  state.unit = u;
+  document.querySelectorAll('#unitChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  calculate();
+}
+
+// ─── SÜSTAL ───────────────────────────────────────────────────────────────────
+function setSyringe(v, el) {
+  state.syringeVol = v;
+  document.getElementById('customSyr').value = '';
+  document.querySelectorAll('#syringeChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  calculate();
+}
+
+function setCustomSyringe() {
+  const v = parseFloat(document.getElementById('customSyr').value);
+  if (v > 0) {
+    state.syringeVol = v;
+    document.querySelectorAll('#syringeChips .chip').forEach(c => c.classList.remove('active'));
+    calculate();
+  }
+}
+
+// ─── ABIFINKTSIOONID ──────────────────────────────────────────────────────────
+function fmtNum(n) {
+  if (!isFinite(n) || n === 0) return '0';
+  if (n >= 1000) return n.toFixed(0);
+  if (n >= 100)  return n.toFixed(1);
+  if (n >= 10)   return n.toFixed(2);
+  if (n >= 1)    return n.toFixed(3);
+  return n.toPrecision(3);
+}
+
+function fmtRate(r) {
+  if (!isFinite(r) || r <= 0) return '—';
+  if (r >= 100) return r.toFixed(0);
+  if (r >= 10)  return r.toFixed(1);
+  return r.toFixed(2);
+}
+
+// Arvuta infusioonikiirus (ml/h)
+// finalConc: ravimi natiivsetes ühikutes/ml (mg/ml või IU/ml)
+function calcRate(dose, doseUnit, weight, finalConc) {
+  if (!finalConc || finalConc <= 0) return null;
+  switch (doseUnit) {
+    case 'mcg/kg/min': return (dose * weight * 60) / (finalConc * 1000);
+    case 'mcg/kg/h':   return (dose * weight)      / (finalConc * 1000);
+    case 'mg/kg/h':    return (dose * weight)      / finalConc;
+    case 'IU/kg/h':    return (dose * weight)      / finalConc;
+    default: return null;
+  }
+}
+
+function buildDoseTable(drug, finalConc, weight) {
+  const { unit: doseUnit, ranges } = drug.doseInfo;
+  const rows = ranges.map(dose => {
+    const rate = calcRate(dose, doseUnit, weight, finalConc);
+    return `<div class="dose-row">
+      <span class="dose-val">${dose}</span>
+      <span class="dose-unit-cell">${doseUnit}</span>
+      <span class="dose-rate-val">${fmtRate(rate)} ml/h</span>
+    </div>`;
+  }).join('');
+  return `<div class="dose-table">
+    <div class="dose-table-title">Annuse tabel — ${weight} kg patsient</div>
+    <div class="dose-table-head">
+      <span>Annus</span><span>Ühik</span><span style="text-align:right">ml/h</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+// ─── KALKULATSIOON ────────────────────────────────────────────────────────────
+function calculate() {
+  const mainEl  = document.getElementById('resultMain');
+  const rowsEl  = document.getElementById('resultRows');
+  const doseEl  = document.getElementById('doseTableSection');
+  const printBtn= document.getElementById('printBtn');
+  const syrVol  = state.syringeVol;
+  const weight  = parseFloat(document.getElementById('patientWeight').value) || null;
+
+  let totalAmt = null;
+  let unit = 'mg';
+  let stockConc = null;
+  let stockVol  = null;
+
+  if (state.drug && !state.manualMode) {
+    const d    = state.drug;
+    const nAmp = parseFloat(document.getElementById('ampoules').value) || 1;
+    totalAmt   = d.conc * d.ampVol * nAmp;
+    unit       = d.unit;
+    stockConc  = d.conc;
+    stockVol   = d.ampVol * nAmp;
+  } else if (state.manualMode && state.manualAmt && state.manualVol) {
+    totalAmt   = state.manualAmt;
+    unit       = state.unit;
+    stockConc  = state.manualAmt / state.manualVol;
+    stockVol   = state.manualVol;
+  }
+
+  if (totalAmt === null || !syrVol) {
+    mainEl.className = 'empty-state';
+    mainEl.textContent = 'Vali ravim ja süstla maht';
+    rowsEl.style.display = 'none';
+    doseEl.style.display = 'none';
+    printBtn.style.display = 'none';
+    return;
+  }
+
+  const finalConc = totalAmt / syrVol;
+
+  mainEl.className = 'result-main';
+  mainEl.innerHTML = `${fmtNum(finalConc)} <span class="result-unit">${unit}/ml</span>`;
+
+  const rows = [];
+  if (stockConc !== null) {
+    rows.push({ label: 'Lähtelahus', val: `${fmtNum(stockConc)} ${unit}/ml (${fmtNum(stockVol)} ml)` });
+  }
+  rows.push({ label: 'Ravimi kogus kokku', val: `${fmtNum(totalAmt)} ${unit}`, hi: true });
+  rows.push({ label: 'Süstla maht', val: `${syrVol} ml` });
+  rows.push({ label: '→ Kontsentratsioon', val: `${fmtNum(finalConc)} ${unit}/ml`, hi: true });
+  rows.push({ label: '→ 10 ml sisaldab', val: `${fmtNum(finalConc * 10)} ${unit}` });
+  if (stockVol && stockVol > syrVol) {
+    rows.push({ label: '⚠ Hoiatus', val: `Lahuse maht (${fmtNum(stockVol)}ml) > süstla maht!`, warn: true });
+  }
+
+  rowsEl.innerHTML = rows.map(r =>
+    `<div class="result-row">
+      <span class="result-row-label">${r.label}</span>
+      <span class="result-row-val${r.hi ? ' highlight' : ''}" style="${r.warn ? 'color:#fbbf24' : ''}">${r.val}</span>
+    </div>`
+  ).join('');
+  rowsEl.style.display = 'flex';
+
+  // Annuse tabel
+  if (weight && state.drug && state.drug.doseInfo && !state.manualMode) {
+    doseEl.innerHTML = buildDoseTable(state.drug, finalConc, weight);
+    doseEl.style.display = 'block';
+  } else {
+    doseEl.style.display = 'none';
+  }
+
+  printBtn.style.display = 'block';
+}
+
+calculate();
+</script>
+</body>
+</html>
