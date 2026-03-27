@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hoovi kõrgusmõõtmised</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f4f0; color: #222; padding: 20px; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    p.sub { color: #555; font-size: 0.9rem; margin-bottom: 20px; }
+
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+      background: white; padding: 16px; border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1); margin-bottom: 20px;
+    }
+    .controls label { font-size: 0.85rem; color: #444; display: flex; flex-direction: column; gap: 4px; }
+    .controls input[type=number] {
+      width: 80px; padding: 6px 8px; border: 1px solid #ccc;
+      border-radius: 6px; font-size: 0.95rem;
+    }
+    button {
+      padding: 8px 16px; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    }
+    #btnGenerate { background: #4a7c59; color: white; }
+    #btnGenerate:hover { background: #3a6147; }
+    #btnReset { background: #e0e0e0; color: #333; }
+    #btnReset:hover { background: #ccc; }
+
+    #grid-wrap {
+      overflow-x: auto; background: white; padding: 16px;
+      border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.1);
+      margin-bottom: 20px; display: none;
+    }
+    #grid-wrap h2 { font-size: 1rem; margin-bottom: 12px; color: #333; }
+
+    table { border-collapse: collapse; }
+    td { padding: 3px; }
+    td input {
+      width: 60px; height: 44px; text-align: center;
+      border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem;
+      transition: background 0.3s;
+    }
+    td input:focus { outline: 2px solid #4a7c59; border-color: transparent; }
+    .row-label, .col-label {
+      font-size: 0.75rem; color: #888; text-align: center; padding: 4px 6px;
+    }
+
+    #map-wrap {
+      background: white; padding: 16px; border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1); margin-bottom: 20px; display: none;
+    }
+    #map-wrap h2 { font-size: 1rem; margin-bottom: 12px; color: #333; }
+
+    #heatmap { display: inline-block; }
+    #heatmap table { border-collapse: collapse; }
+    #heatmap td {
+      width: 52px; height: 52px; text-align: center; vertical-align: middle;
+      font-size: 0.8rem; font-weight: 600; border: 1px solid rgba(0,0,0,.08);
+      border-radius: 4px; color: #222;
+      transition: background 0.4s;
+    }
+
+    .legend {
+      display: flex; align-items: center; gap: 8px; margin-top: 12px;
+      font-size: 0.8rem; color: #555;
+    }
+    .legend-bar {
+      height: 14px; width: 200px; border-radius: 4px;
+      background: linear-gradient(to right, #2166ac, #74add1, #abd9e9, #ffffbf, #fdae61, #d73027);
+    }
+
+    #stats-wrap {
+      background: white; padding: 16px; border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1); display: none;
+    }
+    #stats-wrap h2 { font-size: 1rem; margin-bottom: 12px; color: #333; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+    .stat-card {
+      background: #f7f9f7; border-radius: 8px; padding: 12px;
+      border-left: 4px solid #4a7c59;
+    }
+    .stat-card .val { font-size: 1.5rem; font-weight: 700; color: #2d5a3d; }
+    .stat-card .lbl { font-size: 0.78rem; color: #666; margin-top: 2px; }
+
+    .fill-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85rem; }
+    .fill-table th { background: #4a7c59; color: white; padding: 6px 10px; text-align: left; }
+    .fill-table td { padding: 6px 10px; border-bottom: 1px solid #eee; }
+    .fill-table tr:last-child td { border-bottom: none; }
+    .fill-table tr.fill { background: #fff3cd; }
+    .fill-table tr.cut { background: #cce5ff; }
+
+    .instructions {
+      background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px;
+      padding: 14px; margin-bottom: 20px; font-size: 0.85rem; color: #5c4a00;
+    }
+    .instructions h3 { margin-bottom: 6px; }
+    .instructions ol { padding-left: 18px; line-height: 1.8; }
+  </style>
+</head>
+<body>
+
+<h1>Hoovi kõrgusmõõtmised</h1>
+<p class="sub">Sisesta lasermõõtmise tulemused — rakendus arvutab tasandamiseks vajamineva mulla koguse.</p>
+
+<div class="instructions">
+  <h3>Juhend</h3>
+  <ol>
+    <li>Mõõda hoov ja jaga see ruudustikuks (nt 3×3 m ruudud).</li>
+    <li>Pane lasernivelliir hoovi keskele, lülita sisse.</li>
+    <li>Käi latiga iga ruudu nurgas — loe kõrgusluku <strong>sentimeetrites</strong> ja sisesta allpool.</li>
+    <li>Väiksem number = kõrgem koht (laser on kaugemal maapinnast).</li>
+    <li>Vajuta <strong>Arvuta</strong> — rakendus näitab kuhu on vaja mulda lisada.</li>
+  </ol>
+</div>
+
+<div class="controls">
+  <label>Ridu (Y)
+    <input type="number" id="rows" value="5" min="2" max="15" />
+  </label>
+  <label>Veerge (X)
+    <input type="number" id="cols" value="6" min="2" max="15" />
+  </label>
+  <label>Ruudu külg (m)
+    <input type="number" id="cellsize" value="3" min="0.5" max="20" step="0.5" />
+  </label>
+  <button id="btnGenerate">Loo tabel</button>
+  <button id="btnReset">Tühjenda</button>
+</div>
+
+<div id="grid-wrap">
+  <h2>Mõõtmiste sisestamine <span style="font-weight:400;color:#888;">(cm)</span></h2>
+  <table id="input-table"></table>
+  <div style="margin-top:12px; display:flex; gap:10px;">
+    <button id="btnCalc" style="background:#4a7c59;color:white;">Arvuta</button>
+    <button id="btnDemo" style="background:#6c757d;color:white;">Näidisandmed</button>
+  </div>
+</div>
+
+<div id="map-wrap">
+  <h2>Kõrguskaart</h2>
+  <div id="heatmap"></div>
+  <div class="legend">
+    <span>Madal</span>
+    <div class="legend-bar"></div>
+    <span>Kõrge</span>
+  </div>
+</div>
+
+<div id="stats-wrap">
+  <h2>Analüüs</h2>
+  <div class="stats-grid" id="stats-cards"></div>
+  <h2 style="margin-top:18px;font-size:1rem;">Tasandamisplaan</h2>
+  <table class="fill-table">
+    <thead><tr><th>Punkt</th><th>Kõrvalekalle (cm)</th><th>Toiming</th><th>Mulla kogus (m³)</th></tr></thead>
+    <tbody id="fill-tbody"></tbody>
+  </table>
+</div>
+
+<script>
+  let rows = 5, cols = 6, cellSize = 3;
+
+  function buildTable() {
+    rows = parseInt(document.getElementById('rows').value);
+    cols = parseInt(document.getElementById('cols').value);
+    cellSize = parseFloat(document.getElementById('cellsize').value);
+
+    const tbl = document.getElementById('input-table');
+    tbl.innerHTML = '';
+
+    // header row
+    const htr = document.createElement('tr');
+    htr.appendChild(Object.assign(document.createElement('td'), { className: 'col-label' }));
+    for (let c = 0; c < cols; c++) {
+      const td = document.createElement('td');
+      td.className = 'col-label';
+      td.textContent = `V${c + 1}`;
+      htr.appendChild(td);
+    }
+    tbl.appendChild(htr);
+
+    for (let r = 0; r < rows; r++) {
+      const tr = document.createElement('tr');
+      const lbl = document.createElement('td');
+      lbl.className = 'row-label';
+      lbl.textContent = `R${r + 1}`;
+      tr.appendChild(lbl);
+      for (let c = 0; c < cols; c++) {
+        const td = document.createElement('td');
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.id = `cell_${r}_${c}`;
+        inp.placeholder = '—';
+        inp.step = '0.5';
+        td.appendChild(inp);
+        tr.appendChild(td);
+      }
+      tbl.appendChild(tr);
+    }
+
+    document.getElementById('grid-wrap').style.display = 'block';
+    document.getElementById('map-wrap').style.display = 'none';
+    document.getElementById('stats-wrap').style.display = 'none';
+  }
+
+  function getValues() {
+    const vals = [];
+    for (let r = 0; r < rows; r++) {
+      const row = [];
+      for (let c = 0; c < cols; c++) {
+        const v = parseFloat(document.getElementById(`cell_${r}_${c}`).value);
+        row.push(isNaN(v) ? null : v);
+      }
+      vals.push(row);
+    }
+    return vals;
+  }
+
+  function colorForRatio(t) {
+    // blue (low) -> yellow (mid) -> red (high)
+    const stops = [
+      [33, 102, 172],
+      [116, 173, 209],
+      [171, 217, 233],
+      [255, 255, 191],
+      [253, 174, 97],
+      [215, 48, 39],
+    ];
+    t = Math.max(0, Math.min(1, t));
+    const idx = t * (stops.length - 1);
+    const lo = Math.floor(idx), hi = Math.ceil(idx);
+    const f = idx - lo;
+    const lerp = (a, b) => Math.round(a + (b - a) * f);
+    const [r, g, b] = [0, 1, 2].map(i => lerp(stops[lo][i], stops[hi][i]));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function calculate() {
+    const vals = getValues();
+    const flat = vals.flat().filter(v => v !== null);
+    if (flat.length < 2) { alert('Sisesta vähemalt 2 mõõtmist.'); return; }
+
+    const minV = Math.min(...flat);
+    const maxV = Math.max(...flat);
+    const range = maxV - minV || 1;
+
+    // Build heatmap
+    const hm = document.getElementById('heatmap');
+    hm.innerHTML = '';
+    const tbl = document.createElement('table');
+    for (let r = 0; r < rows; r++) {
+      const tr = document.createElement('tr');
+      for (let c = 0; c < cols; c++) {
+        const td = document.createElement('td');
+        const v = vals[r][c];
+        if (v !== null) {
+          // smaller reading = higher elevation (laser further from ground)
+          const elevation = maxV - v; // relative height above lowest point
+          const t = elevation / range;
+          td.style.background = colorForRatio(t);
+          td.textContent = v.toFixed(1);
+        } else {
+          td.style.background = '#eee';
+          td.textContent = '–';
+        }
+        tr.appendChild(td);
+      }
+      tbl.appendChild(tr);
+    }
+    hm.appendChild(tbl);
+
+    // Stats
+    const mean = flat.reduce((a, b) => a + b, 0) / flat.length;
+    // target = mean (level everything to average)
+    const target = mean;
+    const cellArea = cellSize * cellSize; // m²
+
+    const cards = document.getElementById('stats-cards');
+    cards.innerHTML = '';
+
+    const statData = [
+      { val: flat.length, lbl: 'Mõõtmispunkti' },
+      { val: minV.toFixed(1) + ' cm', lbl: 'Min lugem (kõrgeim punkt)' },
+      { val: maxV.toFixed(1) + ' cm', lbl: 'Max lugem (madalaim punkt)' },
+      { val: (maxV - minV).toFixed(1) + ' cm', lbl: 'Kõrgusvahe kokku' },
+      { val: mean.toFixed(1) + ' cm', lbl: 'Keskmise tasandi lugem' },
+      { val: (rows * cols * cellArea).toFixed(0) + ' m²', lbl: 'Mõõdetud pindala' },
+    ];
+
+    statData.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'stat-card';
+      card.innerHTML = `<div class="val">${s.val}</div><div class="lbl">${s.lbl}</div>`;
+      cards.appendChild(card);
+    });
+
+    // Fill/cut table
+    const tbody = document.getElementById('fill-tbody');
+    tbody.innerHTML = '';
+    let totalFill = 0, totalCut = 0;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const v = vals[r][c];
+        if (v === null) continue;
+        const diff = v - target; // positive = below target = needs fill
+        if (Math.abs(diff) < 0.5) continue; // ignore <5mm diff
+
+        const vol = Math.abs(diff / 100) * cellArea; // m³
+        const tr = document.createElement('tr');
+        tr.className = diff > 0 ? 'fill' : 'cut';
+        const action = diff > 0 ? '+ Lisa mulda' : '− Eemalda mulda';
+        tr.innerHTML = `<td>R${r+1} V${c+1}</td><td>${diff > 0 ? '+' : ''}${diff.toFixed(1)} cm</td><td>${action}</td><td>${vol.toFixed(3)}</td>`;
+        tbody.appendChild(tr);
+        if (diff > 0) totalFill += vol; else totalCut += vol;
+      }
+    }
+
+    // Summary row
+    const sumRow = document.createElement('tr');
+    sumRow.style.fontWeight = '700';
+    sumRow.innerHTML = `<td colspan="3">Kokku lisatav muld</td><td>${totalFill.toFixed(2)} m³</td>`;
+    tbody.appendChild(sumRow);
+
+    document.getElementById('map-wrap').style.display = 'block';
+    document.getElementById('stats-wrap').style.display = 'block';
+    document.getElementById('map-wrap').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function loadDemo() {
+    // Realistic demo: slight slope toward one corner
+    const demo = [
+      [142, 141, 140, 138, 137, 135],
+      [143, 142, 141, 139, 137, 135],
+      [145, 144, 142, 140, 138, 136],
+      [147, 146, 144, 142, 140, 137],
+      [149, 148, 146, 144, 141, 138],
+    ];
+    for (let r = 0; r < rows && r < demo.length; r++) {
+      for (let c = 0; c < cols && c < demo[r].length; c++) {
+        const inp = document.getElementById(`cell_${r}_${c}`);
+        if (inp) inp.value = demo[r][c];
+      }
+    }
+  }
+
+  document.getElementById('btnGenerate').addEventListener('click', buildTable);
+  document.getElementById('btnReset').addEventListener('click', () => {
+    document.querySelectorAll('#input-table input').forEach(i => i.value = '');
+    document.getElementById('map-wrap').style.display = 'none';
+    document.getElementById('stats-wrap').style.display = 'none';
+  });
+  document.getElementById('btnCalc').addEventListener('click', calculate);
+  document.getElementById('btnDemo').addEventListener('click', () => { loadDemo(); calculate(); });
+
+  // Init on load
+  buildTable();
+</script>
+</body>
+</html>
