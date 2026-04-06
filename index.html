@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trips Traps Trulli</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.3rem;
+      letter-spacing: 2px;
+      color: #e0aaff;
+      text-shadow: 0 0 12px #c77dff88;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 1.8rem;
+    }
+
+    .status {
+      font-size: 1.2rem;
+      margin-bottom: 1.2rem;
+      min-height: 1.8rem;
+      color: #c77dff;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .scoreboard {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .score-box {
+      text-align: center;
+      background: #16213e;
+      border: 2px solid #c77dff44;
+      border-radius: 10px;
+      padding: 0.5rem 1.2rem;
+      min-width: 80px;
+    }
+
+    .score-box .label {
+      font-size: 0.75rem;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .score-box .value {
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+
+    .score-box.x .value { color: #f72585; }
+    .score-box.draw .value { color: #aaa; }
+    .score-box.o .value { color: #4cc9f0; }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 110px);
+      grid-template-rows: repeat(3, 110px);
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .cell {
+      background: #16213e;
+      border: 2px solid #c77dff33;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, border-color 0.15s;
+      user-select: none;
+    }
+
+    .cell:hover:not(.taken) {
+      background: #0f3460;
+      border-color: #c77dff88;
+      transform: scale(1.04);
+    }
+
+    .cell.taken {
+      cursor: default;
+    }
+
+    .cell.x {
+      color: #f72585;
+      text-shadow: 0 0 10px #f7258566;
+    }
+
+    .cell.o {
+      color: #4cc9f0;
+      text-shadow: 0 0 10px #4cc9f066;
+    }
+
+    .cell.winning {
+      background: #2a1a4e;
+      border-color: #e0aaff;
+      animation: pulse 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to   { transform: scale(1.06); }
+    }
+
+    .cell.pop {
+      animation: pop 0.2s ease-out;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(0.5); opacity: 0.4; }
+      80%  { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    button.reset {
+      background: transparent;
+      border: 2px solid #c77dff;
+      color: #c77dff;
+      padding: 0.55rem 1.8rem;
+      font-size: 1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    button.reset:hover {
+      background: #c77dff;
+      color: #1a1a2e;
+    }
+  </style>
+</head>
+<body>
+  <h1>Trips Traps Trulli</h1>
+  <p class="subtitle">kolm järjest võidab</p>
+
+  <div class="scoreboard">
+    <div class="score-box x">
+      <div class="label">X</div>
+      <div class="value" id="scoreX">0</div>
+    </div>
+    <div class="score-box draw">
+      <div class="label">Viik</div>
+      <div class="value" id="scoreDraw">0</div>
+    </div>
+    <div class="score-box o">
+      <div class="label">O</div>
+      <div class="value" id="scoreO">0</div>
+    </div>
+  </div>
+
+  <div class="status" id="status">X käib</div>
+
+  <div class="board" id="board">
+    <div class="cell" data-i="0"></div>
+    <div class="cell" data-i="1"></div>
+    <div class="cell" data-i="2"></div>
+    <div class="cell" data-i="3"></div>
+    <div class="cell" data-i="4"></div>
+    <div class="cell" data-i="5"></div>
+    <div class="cell" data-i="6"></div>
+    <div class="cell" data-i="7"></div>
+    <div class="cell" data-i="8"></div>
+  </div>
+
+  <button class="reset" id="resetBtn">Uus mäng</button>
+
+  <script>
+    const WINNING_LINES = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    let board = Array(9).fill(null);
+    let currentPlayer = 'X';
+    let gameOver = false;
+    let scores = { X: 0, O: 0, draw: 0 };
+
+    const cells = document.querySelectorAll('.cell');
+    const statusEl = document.getElementById('status');
+    const resetBtn = document.getElementById('resetBtn');
+
+    cells.forEach(cell => cell.addEventListener('click', () => {
+      const i = +cell.dataset.i;
+      if (gameOver || board[i]) return;
+
+      board[i] = currentPlayer;
+      cell.textContent = currentPlayer;
+      cell.classList.add('taken', currentPlayer.toLowerCase(), 'pop');
+
+      const winning = getWinningLine();
+      if (winning) {
+        winning.forEach(idx => cells[idx].classList.add('winning'));
+        statusEl.textContent = `${currentPlayer} võitis! 🎉`;
+        scores[currentPlayer]++;
+        updateScores();
+        gameOver = true;
+      } else if (board.every(Boolean)) {
+        statusEl.textContent = 'Viik!';
+        scores.draw++;
+        updateScores();
+        gameOver = true;
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        statusEl.textContent = `${currentPlayer} käib`;
+      }
+    }));
+
+    resetBtn.addEventListener('click', resetGame);
+
+    function getWinningLine() {
+      for (const line of WINNING_LINES) {
+        const [a, b, c] = line;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) return line;
+      }
+      return null;
+    }
+
+    function updateScores() {
+      document.getElementById('scoreX').textContent = scores.X;
+      document.getElementById('scoreO').textContent = scores.O;
+      document.getElementById('scoreDraw').textContent = scores.draw;
+    }
+
+    function resetGame() {
+      board = Array(9).fill(null);
+      gameOver = false;
+      currentPlayer = 'X';
+      statusEl.textContent = 'X käib';
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.className = 'cell';
+      });
+    }
+  </script>
+</body>
+</html>
